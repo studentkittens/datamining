@@ -43,6 +43,10 @@ class Distance:
 
 if __name__ == '__main__':
     graph = dot.Dot(graph_type='digraph')
+    graph.set_node_defaults(shape='circle', fixedsize='true',
+            height=.85, width=.85, fontsize=10
+    )
+
     docs = [
             Document("Hans"),
             Document("stohl"),
@@ -59,7 +63,7 @@ if __name__ == '__main__':
             Cluster([docs[4]], name="E")
     ]
 
-    s = list()
+    s = []
 
     a, b, c, d, e = cluster
     s.append(Distance(2, a, b))
@@ -94,8 +98,6 @@ if __name__ == '__main__':
                 name=''.join((left.name, right.name))
         )
 
-        print(' ->', left.name + "-" + right.name)
-
         for dist in s:
             if dist.a is left or dist.a is right:
                 dist.a = parent
@@ -106,7 +108,6 @@ if __name__ == '__main__':
         graph.add_edge(dot.Edge(parent.name, left.name))
         graph.add_edge(dot.Edge(parent.name, right.name))
 
-        # Not exactly sure if this is needed
         s = sorted(set(s), reverse=True)
 
     graph.write_png('cluster.png')
