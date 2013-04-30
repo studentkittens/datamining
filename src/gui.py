@@ -1,3 +1,7 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+
 import os
 import sys
 
@@ -6,6 +10,8 @@ from gi.repository import Pango
 
 from pycha.line import LineChart
 
+
+from cluster import Cluster
 
 CHART_OPTIONS = {
     'axis': {
@@ -44,13 +50,6 @@ CHART_OPTIONS = {
 }
 
 
-LOREM = ''' Eget. Dolor est cursus primis fames semper vestibulum. Nibh arcu, neque fusce, nam habitasse. Pulvinar. Elit fusce sodales mollis ve cras pede. Tellus odio dis viverra dis, mi ipsum. Arcu pulvinar class ad urna turpis rhoncus in, nunc. Magnis fusce arcu aenean porttitor mi, donec pellentesque accumsan velit sollicitudin, penatibus dictum ut diam. Ante litora hendrerit. Quam quis leo. Quam magna eu orci. Ante a elit risus. Viverra, nisl pulvinar ut, nisl inceptos. Pede sociis augue dictum malesuada. Placerat tempor quam erat mollis, litora ad. Montes ipsum blandit rutrum dolor primis fames enim scelerisque at, nostra ad augue. Etiam iaculis id, iaculis id, velit pharetra. Ve ornare. Dignissim massa ut fames ac mi erat odio fusce eros eu consectetuer commodo.
-Tincidunt id, imperdiet adipiscing, conubia orci in sollicitudin aptent, congue, fames. Malesuada justo eu fermentum posuere, tempus ridiculus ad, in odio. Sociis odio ad. Augue eget netus, eu nam duis class lacus, sapien hendrerit volutpat, id ligula. Hendrerit faucibus montes aptent hendrerit ve, turpis. Nibh torquent eu, ullamcorper ad, aptent. Enim orci duis. Nisi vivamus sodales nonummy ornare nulla parturient ve, lobortis. Porta magnis sagittis malesuada ac, nullam conubia semper nibh dictum. Ad, venenatis nulla, venenatis volutpat quis nullam facilisi neque eni pede, leo. Elit tortor adipiscing vitae urna, ac sollicitudin turpis risus. Duis ipsum hymenaeos. Vehicula ad condimentum orci, curabitur dui, blandit et, eu lorem vulputate maecenas ad condimentum pede. Ve condimentum pede, nisl, pharetra a, maecenas. At amet, ornare tristique mi, in mattis consectetuer dapibus.
-Morbi vulputate. Libero. Purus volutpat parturient imperdiet. Elit erat, dui dolor varius euismod mauris. Sit pede sed nulla purus, dis. Mus nulla neque, sociosqu massa dui netus porttitor vehicula. Imperdiet netus sit donec nam lobortis consequat at amet metus ornare quam. Consectetuer potenti vitae eu habitasse nulla. Posuere interdum. Cras, rhoncus odio, ad donec ad consequat condimentum, class consequat neque ante. Molestie, penatibus porta ultricies habitant. Tempus ac sit convallis purus nisi vitae rhoncus nonummy. Cras lorem facilisis lobortis porta venenatis cubilia nunc. Lacus tempus fusce donec. Cursus varius massa id non porttitor aenean dui lectus proin vestibulum. Curae, duis urna.
-Mattis. Sapien, non ante pharetra conubia nascetur mi. Dis nibh elit hymenaeos mauris nascetur neque nulla aliquet sagittis enim mauris non. Pretium tempor etiam sociis litora massa per diam parturient semper in eros turpis leo mollis laoreet. Dolor justo nec parturient venenatis, diam rhoncus curae magna fermentum. Habitasse, lorem imperdiet nulla venenatis ac. Habitant, erat rhoncus eget, et quam. Massa cursus ac accumsan nec, risus. Placerat ad sit montes ut. Arcu. Metus scelerisque vehicula aliquam erat urna dui. At, vitae pharetra per. At. Sociis a, praesent quam tellus ac ligula mi, praesent amet imperdiet eleifend. Quis. Facilisi nisi cras ultricies pellentesque. Magnis maecenas consequat fusce nisl dictum, ve cras ipsum praesent, penatibus.
-'''
-
-
 class TreeVis(Gtk.ApplicationWindow):
     def __init__(self, app, tree_data):
         Gtk.Window.__init__(self, title="TreeVis", application=app)
@@ -64,8 +63,12 @@ class TreeVis(Gtk.ApplicationWindow):
         )
         builder.add_from_file(ui_path)
 
+        # Data
+        self.tree_data = tree_data
+        self.tree_map = {}
+        self.selected_cluster = None
+
         # Widgets
-        self.data = tree_data
         self.tree = builder.get_object('tree')
         self.list = builder.get_object('list')
         self.chartarea = builder.get_object('chartarea')
@@ -100,7 +103,7 @@ class TreeVis(Gtk.ApplicationWindow):
 
         # Fill in data
         self._fill_tree()
-        self._fill_list()
+        self._fill_list('')
 
         # ChartArea should be redrawn on resize
         self.chartarea.connect('draw', self.on_chart_draw)
@@ -112,15 +115,36 @@ class TreeVis(Gtk.ApplicationWindow):
             model_selection.select_path('0')
 
     def _fill_tree(self):
+        # Clear previous data
+        self.tree_map = {}
+        self.tree_store.clear()
+
         tree_iter = None
-        for item in 'ABCDE':
-            tree_iter = self.tree_store.append(tree_iter, (item,))
+        nodes = [(self.tree_data, tree_iter)]
+
+        while len(nodes) is not 0:
+            childs = []
+            for node, tree_iter in nodes:
+                curr_iter = self.tree_store.append(tree_iter, (node.name,))
+                self.tree_map[node.name] = node
+                if node.left is not None:
+                    childs.append((node.left, curr_iter))
+                if node.right is not None:
+                    childs.append((node.right, curr_iter))
+
+            nodes = childs
 
         self.tree.expand_all()
 
-    def _fill_list(self):
-        for i in range(10):
-            self.list_store.append(('Document ' + str(i),))
+    def _fill_list(self, selected_cluster):
+        # Clear previous data
+        self.list_store.clear()
+
+        cluster = self.tree_map.get(selected_cluster, None)
+        if cluster is not None:
+            self.selected_cluster = cluster
+            for doc in cluster.docs:
+                self.list_store.append((doc.path,))
 
     def _fill_docview(self, heading, body):
         self.docbuffer.set_text('')
@@ -134,36 +158,60 @@ class TreeVis(Gtk.ApplicationWindow):
 
         Updates the content of the TextView and re-renders chart.
         '''
+        if self.selected_cluster is None:
+            return
+
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
-            self._fill_docview(model[tree_iter][0], LOREM)
+            doc_name = model[tree_iter][0]
+            for doc in self.selected_cluster.docs:
+                if doc.path == doc_name:
+                    self._fill_docview(doc.path, doc.text)
+                    break
+            else:
+                print('Warning: No documents to display.')
+
+        # Update chart
+        self.chartarea.queue_draw()
 
     def on_tree_select(self, selection):
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
-            self._fill_docview(model[tree_iter][0], LOREM)
+            self._fill_list(model[tree_iter][0])
+
+        # Auto-select first item
+        self.list.get_selection().select_path('0')
+
+        # Update chart
+        self.chartarea.queue_draw()
 
     def on_chart_draw(self, widget, ctx):
-        lines = (
-            ('bar.py', 319),
-            ('chart.py', 875),
-            ('color.py', 204),
-            ('line.py', 130),
-            ('pie.py', 352),
-            ('scatter.py', 38),
-            ('stackedbar.py', 121),
-            ('radar.py', 323),
-        )
+        # TODO: Actually get actual distance..
+        from random import random
 
-        dataSet = (
-            ('lines', [(i, l[1]) for i, l in enumerate(lines)]),
-        )
+        if self.selected_cluster is not None:
+            lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
 
-        CHART_OPTIONS['axis']['x']['ticks'] = [dict(v=i, label=l[0]) for i, l in enumerate(lines)]
+            if len(lines) > 1:
+                dataSet = (
+                    ('docs', [(i, l[1]) for i, l in enumerate(lines)]),
+                )
 
-        chart = LineChart(ctx.get_target(), CHART_OPTIONS)
-        chart.addDataset(dataSet)
-        chart.render()
+                CHART_OPTIONS['axis']['x']['ticks'] = [dict(v=i, label=l[0]) for i, l in enumerate(lines)]
+
+                chart = LineChart(ctx.get_target(), CHART_OPTIONS)
+                chart.addDataset(dataSet)
+                chart.render()
+            else:
+                alloc = widget.get_allocation()
+                ctx.set_source_rgb(0.5, 0.5, 0.5)
+                ctx.move_to(alloc.width / 2, alloc.height / 2)
+                ctx.set_font_size(100)
+                ctx.show_text('⸮')
+                ctx.move_to(alloc.width / 2 - 40, alloc.height / 2 + 30)
+                ctx.set_font_size(10)
+                ctx.show_text('only one document in cluster')
+                ctx.stroke()
 
 
 class TreeVisApplication(Gtk.Application):
@@ -184,4 +232,6 @@ def show_treevis(tree):
     return app.run(sys.argv)
 
 
-show_treevis(None)
+if __name__ == '__main__':
+    from maketree import maketree
+    show_treevis(maketree())
