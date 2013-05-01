@@ -4,6 +4,8 @@
   <object class="GtkGrid" id="grid">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="hexpand">True</property>
+    <property name="vexpand">True</property>
     <child>
       <object class="GtkDrawingArea" id="chartarea">
         <property name="visible">True</property>
@@ -27,12 +29,10 @@
         <property name="shadow_type">in</property>
         <child>
           <object class="GtkTreeView" id="list">
+            <property name="width_request">200</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
             <property name="vexpand">True</property>
-            <child internal-child="selection">
-              <object class="GtkTreeSelection" id="treeview-selection1"/>
-            </child>
           </object>
         </child>
       </object>
@@ -45,7 +45,7 @@
     </child>
     <child>
       <object class="GtkScrolledWindow" id="tree_scw">
-        <property name="width_request">150</property>
+        <property name="width_request">200</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="shadow_type">in</property>
@@ -57,9 +57,6 @@
             <property name="vexpand">True</property>
             <property name="rules_hint">True</property>
             <property name="enable_tree_lines">True</property>
-            <child internal-child="selection">
-              <object class="GtkTreeSelection" id="treeview-selection3"/>
-            </child>
           </object>
         </child>
       </object>

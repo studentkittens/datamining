@@ -4,6 +4,7 @@
 
 import os
 import sys
+import math
 
 from gi.repository import Gtk
 from gi.repository import Pango
@@ -36,10 +37,10 @@ CHART_OPTIONS = {
         'hide': True,
     },
     'padding': {
-        'left': 5,
-        'right': 5,
-        'top': 5,
-        'bottom': 5
+        'left': 20,
+        'right': 20,
+        'top': 20,
+        'bottom': 20
     },
     'stroke': {
         'width': 3,
@@ -207,10 +208,16 @@ class TreeVis(Gtk.ApplicationWindow):
                 ctx.set_source_rgb(0.5, 0.5, 0.5)
                 ctx.move_to(alloc.width / 2, alloc.height / 2)
                 ctx.set_font_size(100)
-                ctx.show_text('⸮')
-                ctx.move_to(alloc.width / 2 - 40, alloc.height / 2 + 30)
+                ctx.show_text('№')
+
+                ctx.move_to(alloc.width / 2 - 25, alloc.height / 2 + 30)
                 ctx.set_font_size(10)
                 ctx.show_text('only one document in cluster')
+
+                ctx.move_to(alloc.width / 2 + 65, alloc.height / 2 + 60)
+                ctx.rotate(math.pi)
+                ctx.set_font_size(100)
+                ctx.show_text('†')
                 ctx.stroke()
 
 
