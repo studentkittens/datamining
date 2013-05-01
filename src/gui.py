@@ -14,6 +14,23 @@ from pycha.line import LineChart
 
 from cluster import Cluster
 
+
+def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
+    color = None
+    sctx = widget.get_style_context()
+    if background:
+        color = sctx.get_background_color(state)
+    else:
+        color = sctx.get_color(state)
+
+    # convert color to a string (used by pycha)
+    return '#{r:0^2x}{g:0^2x}{b:0^2x}'.format(
+            r=int(255 * color.red),
+            g=int(255 * color.green),
+            b=int(255 * color.blue)
+    )
+
+
 CHART_OPTIONS = {
     'axis': {
         'x': {
@@ -37,10 +54,10 @@ CHART_OPTIONS = {
         'hide': True,
     },
     'padding': {
-        'left': 20,
-        'right': 20,
-        'top': 20,
-        'bottom': 20
+        'left': 30,
+        'right': 30,
+        'top': 30,
+        'bottom': 30
     },
     'stroke': {
         'width': 3,
@@ -99,6 +116,9 @@ class TreeVis(Gtk.ApplicationWindow):
                 Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=0)
         )
 
+        # Configure chart colors (take them from the theme)
+        self._configure_chart_colors()
+
         # Add root widget to Window
         self.add(builder.get_object('grid'))
 
@@ -114,6 +134,14 @@ class TreeVis(Gtk.ApplicationWindow):
             model_selection = model.get_selection()
             model_selection.connect('changed', func)
             model_selection.select_path('0')
+
+        # Draw something in the text window
+        self.on_list_select(self.list.get_selection())
+
+    def _configure_chart_colors(self):
+        CHART_OPTIONS['colorScheme']['args']['initialColor'] = get_theme_color(
+                self.tree, True, Gtk.StateFlags.SELECTED
+        )
 
     def _fill_tree(self):
         # Clear previous data
@@ -143,6 +171,7 @@ class TreeVis(Gtk.ApplicationWindow):
 
         cluster = self.tree_map.get(selected_cluster, None)
         if cluster is not None:
+            print("...")
             self.selected_cluster = cluster
             for doc in cluster.docs:
                 self.list_store.append((doc.path,))
@@ -187,13 +216,17 @@ class TreeVis(Gtk.ApplicationWindow):
         self.chartarea.queue_draw()
 
     def on_chart_draw(self, widget, ctx):
-        # TODO: Actually get actual distance..
+        # TODO: Get actual distance...
         from random import random
 
         if self.selected_cluster is not None:
             lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
 
             if len(lines) > 1:
+                # Fill background white:
+                ctx.set_source_rgb(0.96, 0.96, 0.96)
+                ctx.paint()
+
                 dataSet = (
                     ('docs', [(i, l[1]) for i, l in enumerate(lines)]),
                 )
@@ -206,18 +239,16 @@ class TreeVis(Gtk.ApplicationWindow):
             else:
                 alloc = widget.get_allocation()
                 ctx.set_source_rgb(0.5, 0.5, 0.5)
-                ctx.move_to(alloc.width / 2, alloc.height / 2)
-                ctx.set_font_size(100)
-                ctx.show_text('№')
 
-                ctx.move_to(alloc.width / 2 - 25, alloc.height / 2 + 30)
-                ctx.set_font_size(10)
-                ctx.show_text('only one document in cluster')
+                def draw_center_text(text, font_size=15, height_off=0):
+                    ctx.set_font_size(font_size)
+                    extents = ctx.text_extents(text)
+                    ctx.move_to(alloc.width / 2 - extents[2] / 2, alloc.height / 2 - height_off)
+                    ctx.show_text(text)
 
-                ctx.move_to(alloc.width / 2 + 65, alloc.height / 2 + 60)
-                ctx.rotate(math.pi)
-                ctx.set_font_size(100)
-                ctx.show_text('†')
+                draw_center_text('№', 100, +30)
+                draw_center_text('⦃ only one document in cluster ⦄')
+
                 ctx.stroke()
 
 
