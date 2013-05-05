@@ -5,8 +5,8 @@ import os
 import numpy
 
 
-STOP = ['ein', 'eine', 'und', 'der', 'die']
-V = ['katze', 'maus', 'vogel', 'hund']
+STOP = ['die', 'von', 'ist', 'es', 'zum', 'viele', 'je', 'der', 'desto', 'ein']
+V = ['vertrag', 'riskant', 'weg', 'profit', 'rechtfertigung']
 
 
 def read_doc(path):
@@ -101,7 +101,7 @@ if __name__ == '__main__':
 #    for k, v in counts:
         #print(k, v)
 #    f_list = [get_f(doc.lower()) for doc in docs]
-    f = get_f(docs)
+    f = get_f(docs) # textfrequency
     print("f\n", f)
     vd = get_vd(f)
     print('vd\n', vd)
