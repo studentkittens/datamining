@@ -175,7 +175,6 @@ class TreeVis(Gtk.ApplicationWindow):
 
         cluster = self.tree_map.get(selected_cluster, None)
         if cluster is not None:
-            print("...")
             self.selected_cluster = cluster
             for doc in cluster.docs:
                 self.list_store.append((doc.path,))
@@ -217,10 +216,11 @@ class TreeVis(Gtk.ApplicationWindow):
         self.list.get_selection().select_path('0')
 
         # Update chart (with swipe effect! :))
-        new_chart_area = Gtk.DrawingArea()
-        new_chart_area.connect('draw', self.on_chart_draw)
-        swipe(self.chartframe, self.chartarea, new_chart_area, time_ms=300, right=False)
-        self.chartarea = new_chart_area
+        #new_chart_area = Gtk.DrawingArea()
+        #new_chart_area.connect('draw', self.on_chart_draw)
+        #swipe(self.chartframe, self.chartarea, new_chart_area, time_ms=300, right=False)
+        #self.chartarea = new_chart_area
+        self.chartarea.queue_draw()
 
     def on_chart_draw(self, widget, ctx):
         # TODO: Get actual distance...
