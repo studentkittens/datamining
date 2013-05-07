@@ -15,6 +15,9 @@ from pycha.line import LineChart
 from cluster import Cluster
 
 
+from swipe import swipe
+
+
 def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
     color = None
     sctx = widget.get_style_context()
@@ -90,6 +93,7 @@ class TreeVis(Gtk.ApplicationWindow):
         self.tree = builder.get_object('tree')
         self.list = builder.get_object('list')
         self.chartarea = builder.get_object('chartarea')
+        self.chartframe = builder.get_object('chartframe')
         self.docview = builder.get_object('docview')
 
         # Models
@@ -212,8 +216,11 @@ class TreeVis(Gtk.ApplicationWindow):
         # Auto-select first item
         self.list.get_selection().select_path('0')
 
-        # Update chart
-        self.chartarea.queue_draw()
+        # Update chart (with swipe effect! :))
+        new_chart_area = Gtk.DrawingArea()
+        new_chart_area.connect('draw', self.on_chart_draw)
+        swipe(self.chartframe, self.chartarea, new_chart_area, time_ms=300, right=False)
+        self.chartarea = new_chart_area
 
     def on_chart_draw(self, widget, ctx):
         # TODO: Get actual distance...
@@ -223,7 +230,6 @@ class TreeVis(Gtk.ApplicationWindow):
             lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
 
             if len(lines) > 1:
-                # Fill background white:
                 ctx.set_source_rgb(0.96, 0.96, 0.96)
                 ctx.paint()
 
