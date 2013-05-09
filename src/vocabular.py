@@ -27,7 +27,7 @@ def read_directory(root, pattern='*.txt'):
     'Read a the text of a single director into a list'
     result = []
     for path in sorted(glob.glob(os.path.join(root, pattern))):
-        print(path.ljust(50, ' '), end='\r')
+        print(path.ljust(100, ' '), end='\r')
         result.append(read_document(path))
     print()
     return result

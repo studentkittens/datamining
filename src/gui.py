@@ -4,6 +4,7 @@
 # System Libraries
 import os
 import sys
+import math
 
 # GUI Stuff (Pango for font rendering)
 from gi.repository import Gtk
@@ -253,7 +254,7 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in self.selected_cluster.docs:
                 distance = self.selected_doc.distances[doc.name]
                 cut_path = os.path.basename(doc.path)
-                lines.append((cut_path[-5:-1], distance * 100))
+                lines.append((cut_path[-5:-1], math.log10(distance * 100 + 1) / 2.0))
 
             if len(lines) > 1:
                 # This matches the chart background color
