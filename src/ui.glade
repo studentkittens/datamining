@@ -1,34 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <interface>
   <!-- interface-requires gtk+ 3.6 -->
-  <object class="GtkGrid" id="grid">
+  <object class="GtkPaned" id="top_paned">
     <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="hexpand">True</property>
-    <property name="vexpand">True</property>
-    <child>
-      <object class="GtkScrolledWindow" id="scw_list">
-        <property name="width_request">200</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="vexpand">True</property>
-        <property name="shadow_type">in</property>
-        <child>
-          <object class="GtkTreeView" id="list">
-            <property name="width_request">200</property>
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="vexpand">True</property>
-          </object>
-        </child>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
-        <property name="width">1</property>
-        <property name="height">3</property>
-      </packing>
-    </child>
+    <property name="can_focus">True</property>
     <child>
       <object class="GtkScrolledWindow" id="tree_scw">
         <property name="width_request">200</property>
@@ -47,77 +22,126 @@
         </child>
       </object>
       <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-        <property name="width">1</property>
-        <property name="height">3</property>
+        <property name="resize">False</property>
+        <property name="shrink">True</property>
       </packing>
     </child>
     <child>
-      <object class="GtkScrolledWindow" id="doc_scw">
+      <object class="GtkPaned" id="pane_right">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="shadow_type">in</property>
         <child>
-          <object class="GtkTextView" id="docview">
+          <object class="GtkScrolledWindow" id="list_scw">
+            <property name="width_request">200</property>
             <property name="visible">True</property>
             <property name="can_focus">True</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
-            <property name="editable">False</property>
-            <property name="wrap_mode">word</property>
-            <property name="left_margin">4</property>
+            <property name="shadow_type">in</property>
+            <child>
+              <object class="GtkTreeView" id="list">
+                <property name="width_request">200</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="vexpand">True</property>
+              </object>
+            </child>
           </object>
+          <packing>
+            <property name="resize">False</property>
+            <property name="shrink">True</property>
+          </packing>
         </child>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">0</property>
-        <property name="width">1</property>
-        <property name="height">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="sep_text2chart">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">1</property>
-        <property name="margin_bottom">1</property>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">1</property>
-        <property name="width">1</property>
-        <property name="height">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkFrame" id="chartframe">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">True</property>
-        <property name="label_xalign">0</property>
-        <property name="shadow_type">none</property>
         <child>
-          <object class="GtkDrawingArea" id="chartarea">
+          <object class="GtkBox" id="doc_box">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="hexpand">True</property>
-            <property name="vexpand">True</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkPaned" id="voc_text_pane">
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <child>
+                  <object class="GtkScrolledWindow" id="vocview_scw">
+                    <property name="width_request">200</property>
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTreeView" id="vocview">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="resize">False</property>
+                    <property name="shrink">False</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkScrolledWindow" id="doview_scw">
+                    <property name="visible">True</property>
+                    <property name="can_focus">True</property>
+                    <property name="shadow_type">in</property>
+                    <child>
+                      <object class="GtkTextView" id="docview">
+                        <property name="visible">True</property>
+                        <property name="can_focus">True</property>
+                        <property name="hexpand">True</property>
+                        <property name="vexpand">True</property>
+                        <property name="editable">False</property>
+                        <property name="wrap_mode">word</property>
+                        <property name="left_margin">4</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="resize">True</property>
+                    <property name="shrink">True</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkSeparator" id="sep_text2chart">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="margin_top">1</property>
+                <property name="margin_bottom">1</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkDrawingArea" id="chartarea">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="hexpand">True</property>
+                <property name="vexpand">True</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
           </object>
-        </child>
-        <child type="label_item">
-          <placeholder/>
+          <packing>
+            <property name="resize">True</property>
+            <property name="shrink">True</property>
+          </packing>
         </child>
       </object>
       <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">2</property>
-        <property name="width">1</property>
-        <property name="height">1</property>
+        <property name="resize">True</property>
+        <property name="shrink">True</property>
       </packing>
     </child>
   </object>

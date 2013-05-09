@@ -29,16 +29,14 @@ if __name__ == '__main__':
     weight_matrix = calc.weight_matrix(norm_termfreq, inverse_doc_freq)
     document_abs = calc.document_abs(weight_matrix)
 
-    print("Full vocabulary\n", vocabular)
-    print("Termfreq\n", termfreq)
-    print("Bag of Words\n", bag_of_words)
-    print("v_max\n", v_max)
-    print("Normed Termfreq\n", norm_termfreq)
-    print("Inverse Doc Freq\n", inverse_doc_freq)
-    print("Weight Vec:\n", weight_matrix)
-    print("Document Abs:\n", document_abs)
-
-    np.set_printoptions(precision=16)
+    #print("Full vocabulary\n", vocabular)
+    #print("Termfreq\n", termfreq)
+    #print("Bag of Words\n", bag_of_words)
+    #print("v_max\n", v_max)
+    #print("Normed Termfreq\n", norm_termfreq)
+    #print("Inverse Doc Freq\n", inverse_doc_freq)
+    #print("Weight Vec:\n", weight_matrix)
+    #print("Document Abs:\n", document_abs)
 
     n_rows = weight_matrix.shape[0]
 
@@ -50,15 +48,17 @@ if __name__ == '__main__':
     for i in range(n_rows):
         doc = docs[i]
         doc.distances[doc.name] = 1.0
+        doc.set_norm_freq(termfreq[i], norm_termfreq[i], vocabular)
+
         for j in range(i + 1, n_rows):
-            dist = calc.distance(weight_matrix[i], weight_matrix[j], document_abs[i], document_abs[j])
+            dist = calc.distance(
+                    weight_matrix[i], weight_matrix[j],
+                    document_abs[i], document_abs[j]
+            )
             distances.append(Distance(dist, clusters[i], clusters[j]))
 
             doc.distances[docs[j].name] = dist
             docs[j].distances[doc.name] = dist
-        print(doc, doc.distances)
-
-    print(distances)
 
     tree = maketree(distances, len(clusters))
     show_treevis(tree)

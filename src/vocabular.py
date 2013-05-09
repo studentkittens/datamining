@@ -3,18 +3,21 @@
 
 import os
 import glob
+import codecs
+
 import Stemmer
 
 from document import Document
 
 stemmer = Stemmer.Stemmer('german')
 
+
 def get_stopwords():
     return "ist ein sein je der desto es viel zum die von".split()
 
 
 def read_document(path):
-    with open(path, 'r') as f:
+    with codecs.open(path, 'r', 'utf-8') as f:
         text = f.read()
         doc = Document(path, text, text_to_words(text, get_stopwords()))
     return doc
@@ -24,8 +27,9 @@ def read_directory(root, pattern='*.txt'):
     'Read a the text of a single director into a list'
     result = []
     for path in sorted(glob.glob(os.path.join(root, pattern))):
-        print(path)
+        print(path.ljust(50, ' '), end='\r')
         result.append(read_document(path))
+    print()
     return result
 
 

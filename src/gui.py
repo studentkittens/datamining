@@ -1,21 +1,16 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-
+# System Libraries
 import os
 import sys
-import math
 
+# GUI Stuff (Pango for font rendering)
 from gi.repository import Gtk
 from gi.repository import Pango
 
+# Chartdrawing
 from pycha.line import LineChart
-
-
-from cluster import Cluster
-
-
-from swipe import swipe
 
 
 def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
@@ -77,6 +72,7 @@ class TreeVis(Gtk.ApplicationWindow):
         self.set_default_size(350, 200)
         self.set_border_width(3)
 
+        # Load UI Definition file
         builder = Gtk.Builder()
         ui_path = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)),
@@ -94,8 +90,8 @@ class TreeVis(Gtk.ApplicationWindow):
         self.tree = builder.get_object('tree')
         self.list = builder.get_object('list')
         self.chartarea = builder.get_object('chartarea')
-        self.chartframe = builder.get_object('chartframe')
         self.docview = builder.get_object('docview')
+        self.vocview = builder.get_object('vocview')
 
         # Models
         self.tree_store = Gtk.TreeStore(str)
@@ -103,18 +99,17 @@ class TreeVis(Gtk.ApplicationWindow):
         self.list_store = Gtk.ListStore(str)
         self.list.set_model(self.list_store)
         self.docbuffer = self.docview.get_buffer()
+        self.voc_store = Gtk.ListStore(str, int, str)
+        self.vocview.set_model(self.voc_store)
 
-        # Styling (Make header bold)
+        # Styling for the Textview
         self.bold_tag = self.docbuffer.create_tag(
-                'head', size_points=16, weight=Pango.Weight.BOLD
+                'head', size_points=16,
+                weight=Pango.Weight.BOLD,
+                underline=Pango.Underline.DOUBLE
         )
-
         self.norm_tag = self.docbuffer.create_tag(
                 'norm', size_points=10
-        )
-
-        self.voc_tag = self.docbuffer.create_tag(
-                'vocs', size_points=10, weight=Pango.Weight.BOLD
         )
 
         # Columns
@@ -124,12 +119,22 @@ class TreeVis(Gtk.ApplicationWindow):
         self.list.append_column(
                 Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=0)
         )
+        self.vocview.append_column(
+                Gtk.TreeViewColumn('Vocabulary', Gtk.CellRendererText(), text=0)
+        )
+        self.vocview.append_column(
+                Gtk.TreeViewColumn(
+                    'Normalized Frequency',
+                    Gtk.CellRendererProgress(),
+                    value=1, text=2
+                )
+        )
 
         # Configure chart colors (take them from the theme)
         self._configure_chart_colors()
 
         # Add root widget to Window
-        self.add(builder.get_object('grid'))
+        self.add(builder.get_object('top_paned'))
 
         # Fill in data
         self._fill_tree()
@@ -148,6 +153,7 @@ class TreeVis(Gtk.ApplicationWindow):
         self.on_list_select(self.list.get_selection())
 
     def _configure_chart_colors(self):
+        # Make chart color look like the highlighted theme color
         CHART_OPTIONS['colorScheme']['args']['initialColor'] = get_theme_color(
                 self.tree, True, Gtk.StateFlags.SELECTED
         )
@@ -184,21 +190,32 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in cluster.docs:
                 self.list_store.append((doc.path,))
 
-    def _fill_docview(self, heading, body, vocs):
+    def _fill_docview(self, heading, body):
         self.docbuffer.set_text('')
 
         for style, text in [(self.bold_tag, heading), (self.norm_tag, body)]:
             pos = self.docbuffer.get_end_iter()
             self.docbuffer.insert_with_tags(pos, text + '\n\n', style)
 
-        pos = self.docbuffer.get_end_iter()
-        self.docbuffer.insert_with_tags(pos, 'Vocabulary:\n' + ' '.join(set(vocs)), self.voc_tag)
+    def _fill_voc_list(self, doc):
+        self.voc_store.clear()
+
+        result = []
+        for idx, voc in enumerate(doc.vocs):
+            result.append((
+                voc, doc.norm_freq[idx] * 100,
+                str(int(doc.abs_freq[idx]))
+            ))
+
+        for item in set(result):
+            self.voc_store.append(item)
 
     def on_list_select(self, selection):
         '''Called when user selects a document in the List
 
         Updates the content of the TextView and re-renders chart.
         '''
+        # This should not happen, except on startup
         if self.selected_cluster is None:
             return
 
@@ -208,7 +225,8 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in self.selected_cluster.docs:
                 if doc.path == doc_name:
                     self.selected_doc = doc
-                    self._fill_docview(doc.path, doc.text, doc.vocs)
+                    self._fill_docview(doc.path, doc.text)
+                    self._fill_voc_list(doc)
                     break
             else:
                 print('Warning: No documents to display.')
@@ -217,6 +235,7 @@ class TreeVis(Gtk.ApplicationWindow):
         self.chartarea.queue_draw()
 
     def on_tree_select(self, selection):
+        # Refill documents list
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
             self._fill_list(model[tree_iter][0])
@@ -224,51 +243,53 @@ class TreeVis(Gtk.ApplicationWindow):
         # Auto-select first item
         self.list.get_selection().select_path('0')
 
-        # Update chart (with swipe effect! :))
-        #new_chart_area = Gtk.DrawingArea()
-        #new_chart_area.connect('draw', self.on_chart_draw)
-        #swipe(self.chartframe, self.chartarea, new_chart_area, time_ms=300, right=False)
-        #self.chartarea = new_chart_area
+        # Redraw chart
         self.chartarea.queue_draw()
 
     def on_chart_draw(self, widget, ctx):
-        # TODO: Get actual distance...
-
+        # This should not happen actually, but be sure.
         if self.selected_cluster and self.selected_doc:
             lines = []
             for doc in self.selected_cluster.docs:
-                lines.append((doc.path, self.selected_doc.distances[doc.name]))
-
-            lines = tuple(lines)
-
-            #lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
+                distance = self.selected_doc.distances[doc.name]
+                cut_path = os.path.basename(doc.path)
+                lines.append((cut_path[-5:-1], distance * 100))
 
             if len(lines) > 1:
+                # This matches the chart background color
                 ctx.set_source_rgb(0.96, 0.96, 0.96)
                 ctx.paint()
 
+                # Build actual indexed dataset from lines
                 dataSet = (
                     ('docs', [(i, l[1]) for i, l in enumerate(lines)]),
                 )
 
+                # Grid legend scaling
                 CHART_OPTIONS['axis']['x']['ticks'] = [dict(v=i, label=l[0]) for i, l in enumerate(lines)]
 
+                # Actually draw the chart on the surface provided by ctx
                 chart = LineChart(ctx.get_target(), CHART_OPTIONS)
                 chart.addDataset(dataSet)
                 chart.render()
             else:
+                # No data to display, so just display a nicely rendererd "NO!
                 alloc = widget.get_allocation()
                 ctx.set_source_rgb(0.5, 0.5, 0.5)
 
+                # Draw text exactly centered in the widget center, with a
+                # certain offset in height
                 def draw_center_text(text, font_size=15, height_off=0):
                     ctx.set_font_size(font_size)
                     extents = ctx.text_extents(text)
                     ctx.move_to(alloc.width / 2 - extents[2] / 2, alloc.height / 2 - height_off)
                     ctx.show_text(text)
 
+                # Now you gonna see if your font is good :-)
                 draw_center_text('№', 100, +30)
                 draw_center_text('⦃ only one document in cluster ⦄')
 
+                # Draw current state
                 ctx.stroke()
 
 
