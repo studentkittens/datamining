@@ -58,7 +58,6 @@ def inverse_doc_freq(N, bag_of_words):
     n_docs = np.zeros(bag_of_words.shape[1])
     for row in bag_of_words:
         n_docs += row
-        print(n_docs)
 
     return np.log10(N / n_docs)
 

@@ -5,6 +5,7 @@
 import os
 import sys
 import math
+import logging
 
 # GUI Stuff (Pango for font rendering)
 from gi.repository import Gtk
@@ -230,7 +231,7 @@ class TreeVis(Gtk.ApplicationWindow):
                     self._fill_voc_list(doc)
                     break
             else:
-                print('Warning: No documents to display.')
+                logging.debug('Warning: No documents to display.')
 
         # Update chart
         self.chartarea.queue_draw()
