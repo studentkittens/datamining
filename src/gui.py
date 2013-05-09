@@ -88,6 +88,7 @@ class TreeVis(Gtk.ApplicationWindow):
         self.tree_data = tree_data
         self.tree_map = {}
         self.selected_cluster = None
+        self.selected_doc = None
 
         # Widgets
         self.tree = builder.get_object('tree')
@@ -110,6 +111,10 @@ class TreeVis(Gtk.ApplicationWindow):
 
         self.norm_tag = self.docbuffer.create_tag(
                 'norm', size_points=10
+        )
+
+        self.voc_tag = self.docbuffer.create_tag(
+                'vocs', size_points=10, weight=Pango.Weight.BOLD
         )
 
         # Columns
@@ -179,12 +184,15 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in cluster.docs:
                 self.list_store.append((doc.path,))
 
-    def _fill_docview(self, heading, body):
+    def _fill_docview(self, heading, body, vocs):
         self.docbuffer.set_text('')
 
         for style, text in [(self.bold_tag, heading), (self.norm_tag, body)]:
             pos = self.docbuffer.get_end_iter()
             self.docbuffer.insert_with_tags(pos, text + '\n\n', style)
+
+        pos = self.docbuffer.get_end_iter()
+        self.docbuffer.insert_with_tags(pos, 'Vocabulary:\n' + ' '.join(set(vocs)), self.voc_tag)
 
     def on_list_select(self, selection):
         '''Called when user selects a document in the List
@@ -199,7 +207,8 @@ class TreeVis(Gtk.ApplicationWindow):
             doc_name = model[tree_iter][0]
             for doc in self.selected_cluster.docs:
                 if doc.path == doc_name:
-                    self._fill_docview(doc.path, doc.text)
+                    self.selected_doc = doc
+                    self._fill_docview(doc.path, doc.text, doc.vocs)
                     break
             else:
                 print('Warning: No documents to display.')
@@ -224,10 +233,15 @@ class TreeVis(Gtk.ApplicationWindow):
 
     def on_chart_draw(self, widget, ctx):
         # TODO: Get actual distance...
-        from random import random
 
-        if self.selected_cluster is not None:
-            lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
+        if self.selected_cluster and self.selected_doc:
+            lines = []
+            for doc in self.selected_cluster.docs:
+                lines.append((doc.path, self.selected_doc.distances[doc.name]))
+
+            lines = tuple(lines)
+
+            #lines = tuple([(doc.path, random()) for doc in self.selected_cluster.docs])
 
             if len(lines) > 1:
                 ctx.set_source_rgb(0.96, 0.96, 0.96)
@@ -273,7 +287,7 @@ class TreeVisApplication(Gtk.Application):
 
 def show_treevis(tree):
     app = TreeVisApplication(tree)
-    return app.run(sys.argv)
+    return app.run([])
 
 
 if __name__ == '__main__':

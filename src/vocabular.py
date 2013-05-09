@@ -5,6 +5,9 @@ import os
 import glob
 import Stemmer
 
+from document import Document
+
+stemmer = Stemmer.Stemmer('german')
 
 def get_stopwords():
     return "ist ein sein je der desto es viel zum die von".split()
@@ -12,30 +15,31 @@ def get_stopwords():
 
 def read_document(path):
     with open(path, 'r') as f:
-        doc = f.read()
+        text = f.read()
+        doc = Document(path, text, text_to_words(text, get_stopwords()))
     return doc
 
 
 def read_directory(root, pattern='*.txt'):
     'Read a the text of a single director into a list'
     result = []
-    for path in glob.glob(os.path.join(root, pattern)):
+    for path in sorted(glob.glob(os.path.join(root, pattern))):
+        print(path)
         result.append(read_document(path))
     return result
 
 
 def sanitize_word(word):
     'Normalize a single word'
-    return ''.join(filter(str.isalnum, word)).lower()
+    return stemmer.stemWord(''.join(filter(str.isalnum, word)).lower())
 
 
-def doc_to_words(doc, stopwords):
+def text_to_words(doc, stopwords):
     '''
     :doc: The text as newline seperated string
     :stopwords: List of words to filter (after normalization)
     :returns: a list of words in the document without the stopwords
     '''
-    stemmer = Stemmer.Stemmer('german')
     words = []
     for line in doc.splitlines():
         for word in line.split():
@@ -43,9 +47,9 @@ def doc_to_words(doc, stopwords):
             if good_word not in stopwords:
                 words.append(good_word)
 
-    return stemmer.stemWords(words)
+    return words
 
 if __name__ == '__main__':
     import sys
     for document in read_directory(sys.argv[1]):
-        print(doc_to_words(document, get_stopwords()))
+        print(document.text, document.vocs)

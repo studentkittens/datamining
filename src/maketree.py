@@ -32,48 +32,50 @@ class Distance:
         return "Dist({a}-{b}={d})".format(d=self.dist, a=self.a, b=self.b)
 
 
-def maketree():
-    docs = [
-            Document('hans_der_pole.txt', LOREM),
-            Document('stohl_nachts.txt', LOREM),
-            Document('die.txt', LOREM),
-            Document('weiße_ganz.txt', LOREM),
-            Document('ausrufezeichen.txt', LOREM)
-    ]
+def maketree(distances, cluster_len):
+    #docs = [
+    #        Document('hans_der_pole.txt', LOREM),
+    #        Document('stohl_nachts.txt', LOREM),
+    #        Document('die.txt', LOREM),
+    #        Document('weiße_ganz.txt', LOREM),
+    #        Document('ausrufezeichen.txt', LOREM)
+    #]
 
-    cluster = [
-            Cluster([docs[0]], name="A"),
-            Cluster([docs[1]], name="B"),
-            Cluster([docs[2]], name="C"),
-            Cluster([docs[3]], name="D"),
-            Cluster([docs[4]], name="E")
-    ]
+    #cluster = [
+    #        Cluster([docs[0]], name="A"),
+    #        Cluster([docs[1]], name="B"),
+    #        Cluster([docs[2]], name="C"),
+    #        Cluster([docs[3]], name="D"),
+    #        Cluster([docs[4]], name="E")
+    #]
 
-    s = []
+    #s = []
 
-    a, b, c, d, e = cluster
-    s.append(Distance(2, a, b))
-    s.append(Distance(4, a, c))
-    s.append(Distance(5, a, d))
-    s.append(Distance(7, a, e))
+    #a, b, c, d, e = cluster
+    #s.append(Distance(2, a, b))
+    #s.append(Distance(4, a, c))
+    #s.append(Distance(5, a, d))
+    #s.append(Distance(7, a, e))
 
-    s.append(Distance(3, b, c))
-    s.append(Distance(6, b, d))
-    s.append(Distance(8, b, e))
+    #s.append(Distance(3, b, c))
+    #s.append(Distance(6, b, d))
+    #s.append(Distance(8, b, e))
 
-    s.append(Distance(1, c, d))
-    s.append(Distance(2, c, e))
+    #s.append(Distance(1, c, d))
+    #s.append(Distance(2, c, e))
 
-    s.append(Distance(1, d, e))
+    #s.append(Distance(1, d, e))
+
+    s = distances
 
     # Initial sort
-    s.sort(reverse=True)
+    s.sort(reverse=False)
 
     # parent is the topmost node
     parent = None
 
     # Iterate till n-1 new nodes have been created.
-    for i in range(len(cluster) - 1):
+    for i in range(cluster_len - 1):
         # Get the cluster with the shortest distance out
         # On every iteration the length should be sum(0..n-1)
         nearest = s.pop()
@@ -81,8 +83,7 @@ def maketree():
 
         # Create a new cluster, containing both
         parent = Cluster(left.docs + right.docs,
-                left=left, right=right,
-                name=''.join((left.name, right.name))
+                left=left, right=right
         )
 
         for dist in s:
@@ -91,7 +92,7 @@ def maketree():
             elif dist.b is left or dist.b is right:
                 dist.b = parent
 
-        s = sorted(set(s), reverse=True)
+        s = sorted(set(s), reverse=False)
 
     #graph.write_png('cluster.png')
     return parent

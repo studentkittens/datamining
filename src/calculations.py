@@ -4,15 +4,17 @@
 
 import numpy as np
 
+from vocabular import sanitize_word
 
-def termfreq(docs):
+
+def termfreq(docs, voc):
     '''
     Matrix with docs on columns, words on rows. Value is the count of word.
     '''
-    f = np.zeros((len(docs), len(V)))
+    f = np.zeros((len(docs), len(voc)))
     for r, doc in enumerate(docs):
-        for i, v in enumerate(V):
-            f[r, i] = doc.lower().count(v)
+        for i, v in enumerate(voc):
+            f[r, i] = doc.vocs.count(v)
     return f
 
 
@@ -48,12 +50,17 @@ def doc_freq(freq):
     return v_max
 
 
-def inverse_doc_freq(N, doc_freq):
+def inverse_doc_freq(N, bag_of_words):
     '''
     :N: Number of Documents
     :df: document_freq
     '''
-    return np.log10(N / doc_freq)
+    n_docs = np.zeros(bag_of_words.shape[1])
+    for row in bag_of_words:
+        n_docs += row
+        print(n_docs)
+
+    return np.log10(N / n_docs)
 
 
 def term_freq_to_inverse_doc_freq(nf, idf):
@@ -72,3 +79,19 @@ def normalized_term_freq(freq, v_max):
     for idx, row in enumerate(freq):
         nf[idx] = freq[idx] / v_max
     return nf
+
+
+def weight_matrix(norm_freq, inverse_doc_freq):
+    return norm_freq * inverse_doc_freq
+
+
+def document_abs(weight_matrix):
+    abs_vec = np.zeros(weight_matrix.shape[0])
+    for idx, row in enumerate(weight_matrix):
+        abs_vec[idx] = np.linalg.norm(row)
+
+    return abs_vec
+
+
+def distance(weight_a, weight_b, abs_a, abs_b):
+    return np.dot(weight_a, weight_b) / (abs_a * abs_b)
