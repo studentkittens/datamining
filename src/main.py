@@ -80,7 +80,7 @@ def build_cluster_tree(
 def get_stopwords(sw_path):
     try:
         with open(sw_path, 'r') as f:
-            return [voc.sanitize_word(word) for word in f.read().split()]
+            return set([voc.sanitize_word(word) for word in f.read().split()])
     except FileNotFoundError:
         logging.warning('No file called <%s>, use --stop-words' % sw_path)
         sys.exit(-1)
