@@ -14,7 +14,7 @@ def termfreq(docs, voc):
     f = np.zeros((len(docs), len(voc)))
     for r, doc in enumerate(docs):
         for i, v in enumerate(voc):
-            f[r, i] = doc.vocs.count(v)
+            f[r, i] = doc.count_voc(v) #doc.vocs.count(v)
     return f
 
 

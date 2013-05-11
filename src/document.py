@@ -8,13 +8,24 @@ class Document:
     def __init__(self, path, text, vocs):
         self._path = path
         self._text = text
-        self._vocs = vocs
+
+        self._vocs = sorted(vocs)
+        self._vocs_index = {}
+        self._build_voc_index()
+
         self._name = 'd' + str(Document.DOC_INDEX)
         self._distances = {}
 
         self._norm_freq = [0.0 for voc in self._vocs]
         self._abs_freq = [0.0 for voc in self._vocs]
         Document.DOC_INDEX += 1
+
+    def _build_voc_index(self):
+        for voc in self._vocs:
+            if voc in self._vocs_index:
+                self._vocs_index[voc] += 1
+            else:
+                self._vocs_index[voc] = +1
 
     @property
     def distances(self):
@@ -43,6 +54,9 @@ class Document:
     @property
     def abs_freq(self):
         return self._abs_freq
+
+    def count_voc(self, word):
+        return self._vocs_index.get(word, 0)
 
     def set_norm_freq(self, abs_freq, norm_freq, all_vocs):
         for idx, voc in enumerate(self._vocs):
