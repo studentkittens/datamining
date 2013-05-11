@@ -54,27 +54,29 @@ def build_cluster_tree(
         vocabular):
     n_rows = weight_matrix.shape[0]
 
-    distances = []
-    clusters = []
-    for doc in docs:
-        clusters.append(Cluster([doc]))
+    with timing('Preparing distances'):
+        distances = []
+        clusters = []
+        for doc in docs:
+            clusters.append(Cluster([doc]))
 
-    for i in range(n_rows):
-        doc = docs[i]
-        doc.distances[doc.name] = 1.0
-        doc.set_norm_freq(termfreq[i], norm_termfreq[i], vocabular)
+        for i in range(n_rows):
+            doc = docs[i]
+            doc.distances[doc.name] = 1.0
+            doc.set_norm_freq(termfreq[i], norm_termfreq[i], vocabular)
 
-        for j in range(i + 1, n_rows):
-            dist = calc.distance(
-                    weight_matrix[i], weight_matrix[j],
-                    document_abs[i], document_abs[j]
-            )
-            distances.append(Distance(dist, clusters[i], clusters[j]))
+            for j in range(i + 1, n_rows):
+                dist = calc.distance(
+                        weight_matrix[i], weight_matrix[j],
+                        document_abs[i], document_abs[j]
+                )
+                distances.append(Distance(dist, clusters[i], clusters[j]))
 
-            doc.distances[docs[j].name] = dist
-            docs[j].distances[doc.name] = dist
+                doc.distances[docs[j].name] = dist
+                docs[j].distances[doc.name] = dist
 
-    return maketree(distances, len(clusters))
+    with timing('Calling maketree'):
+        return maketree(distances, len(clusters))
 
 
 def get_stopwords(sw_path):
@@ -138,11 +140,10 @@ def main(options):
         logging.debug("Document Abs:\n%s" % document_abs)
 
     # Build hierachical clusters from the weight_matrix
-    with timing('Building Cluster Tree'):
-        cluster_tree = build_cluster_tree(
-                docs, weight_matrix, document_abs,
-                norm_termfreq, termfreq, vocabular
-        )
+    cluster_tree = build_cluster_tree(
+            docs, weight_matrix, document_abs,
+            norm_termfreq, termfreq, vocabular
+    )
 
     # Visualize the tree
     if not options['--show-no-gui']:

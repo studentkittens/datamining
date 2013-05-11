@@ -14,7 +14,7 @@ def termfreq(docs, voc):
     f = np.zeros((len(docs), len(voc)))
     for r, doc in enumerate(docs):
         for i, v in enumerate(voc):
-            f[r, i] = doc.count_voc(v) #doc.vocs.count(v)
+            f[r, i] = doc.count_voc(v)
     return f
 
 
@@ -23,8 +23,9 @@ def bag_of_words(freq):
     0/1 Matrix with docs on columns, words on rows.
     '''
     vd = np.array(freq)
-    for i, x in np.ndenumerate(vd):
-        vd[i] = min(x, 1)
+    for i in range(freq.shape[0]):
+        for j in range(freq.shape[1]):
+            vd[i, j] = 1 if freq[i, j] else 0
     return vd
 
 
