@@ -58,10 +58,10 @@ class Document:
     def count_voc(self, word):
         return self._vocs_index.get(word, 0)
 
-    def set_norm_freq(self, abs_freq, norm_freq, all_vocs):
+    def set_norm_freq(self, abs_freq, norm_freq, sorted_mapping):
         for idx, voc in enumerate(self._vocs):
             try:
-                freq_idx = all_vocs.index(voc)
+                freq_idx = sorted_mapping[voc]
                 self._norm_freq[idx] = norm_freq[freq_idx]
                 self._abs_freq[idx] = abs_freq[freq_idx]
             except ValueError:

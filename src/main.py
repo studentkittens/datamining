@@ -60,10 +60,12 @@ def build_cluster_tree(
         for doc in docs:
             clusters.append(Cluster([doc]))
 
+        sorted_mapping = {voc: idx for idx, voc in enumerate(vocabular)}
+
         for i in range(n_rows):
             doc = docs[i]
             doc.distances[doc.name] = 1.0
-            doc.set_norm_freq(termfreq[i], norm_termfreq[i], vocabular)
+            doc.set_norm_freq(termfreq[i], norm_termfreq[i], sorted_mapping)
 
             for j in range(i + 1, n_rows):
                 dist = calc.distance(

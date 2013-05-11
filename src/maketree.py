@@ -15,9 +15,11 @@ class Distance:
         return self.dist < node.dist
 
     def __eq__(self, node):
+        print("eq")
         return (self.a is node.a or self.a is node.b) and (self.b is node.a or self.b is node.b)
 
     def __hash__(self):
+        print("Hassh?")
         return id(self.a) + id(self.b)
 
     def __repr__(self):
@@ -53,6 +55,6 @@ def maketree(distances, cluster_len):
             elif dist.b is left or dist.b is right:
                 dist.b = parent
 
-        s = list(set(s))
+        s = list(frozenset(s))
 
     return parent
