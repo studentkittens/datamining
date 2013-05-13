@@ -19,14 +19,12 @@ Options:
 '''
 
 __version__ = '0.01'
-__authors__ = ['ccwelic', 'cpahl', 'cpiechula']
+__authors__ = ['ccwelich', 'cpahl', 'cpiechula']
 
 
 # System libs
 import sys
 import logging
-import contextlib
-import time
 
 # Option parsing
 from docopt import docopt
@@ -34,51 +32,11 @@ from docopt import docopt
 # Own modules
 import calculations as calc
 import vocabular as voc
+from timing import timing
 
-from maketree import Distance, maketree
-from cluster import Cluster
+from maketree2 import Distance, maketree, build_cluster_tree
+from cluster2 import * 
 from gui import show_treevis
-
-
-@contextlib.contextmanager
-def timing(task):
-    start_time = time.time()
-    yield
-    ready_time = time.time()
-    logging.info('%10f: -> %s' % (ready_time - start_time, task))
-
-
-def build_cluster_tree(
-        docs, weight_matrix,
-        document_abs, norm_termfreq, termfreq,
-        vocabular):
-    n_rows = weight_matrix.shape[0]
-
-    with timing('Preparing distances'):
-        distances = []
-        clusters = []
-        for doc in docs:
-            clusters.append(Cluster([doc]))
-
-        sorted_mapping = {voc: idx for idx, voc in enumerate(vocabular)}
-
-        for i in range(n_rows):
-            doc = docs[i]
-            doc.distances[doc.name] = 1.0
-            doc.set_norm_freq(termfreq[i], norm_termfreq[i], sorted_mapping)
-
-            for j in range(i + 1, n_rows):
-                dist = calc.distance(
-                        weight_matrix[i], weight_matrix[j],
-                        document_abs[i], document_abs[j]
-                )
-                distances.append(Distance(dist, clusters[i], clusters[j]))
-
-                doc.distances[docs[j].name] = dist
-                docs[j].distances[doc.name] = dist
-
-    with timing('Calling maketree'):
-        return maketree(distances, len(clusters))
 
 
 def get_stopwords(sw_path):

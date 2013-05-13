@@ -4,6 +4,7 @@
 from cluster2 import *
 from document import Document
 from timing import timing
+import calculations as calc
 
 
 class Distance:
