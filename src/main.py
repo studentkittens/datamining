@@ -19,14 +19,12 @@ Options:
 '''
 
 __version__ = '0.01'
-__authors__ = ['ccwelic', 'cpahl', 'cpiechula']
+__authors__ = ['ccwelich', 'cpahl', 'cpiechula']
 
 
 # System libs
 import sys
 import logging
-import contextlib
-import time
 
 # Option parsing
 from docopt import docopt
@@ -34,17 +32,10 @@ from docopt import docopt
 # Own modules
 import calculations as calc
 import vocabular as voc
+from timing import timing
 
 from maketree import build_cluster_tree
 from gui import show_treevis
-
-
-@contextlib.contextmanager
-def timing(task):
-    start_time = time.time()
-    yield
-    ready_time = time.time()
-    logging.info('%10f: -> %s' % (ready_time - start_time, task))
 
 
 def get_stopwords(sw_path):
