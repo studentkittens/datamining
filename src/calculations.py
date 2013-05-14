@@ -4,29 +4,21 @@
 
 import numpy as np
 
-from vocabular import sanitize_word
-
 
 def termfreq(docs, voc):
     '''
     Matrix with docs on columns, words on rows. Value is the count of word.
     '''
-    f = np.zeros((len(docs), len(voc)))
+    term_freq = np.zeros((len(docs), len(voc)))
+    bag_of_words = np.zeros((len(docs), len(voc)))
+
     for r, doc in enumerate(docs):
         for i, v in enumerate(voc):
-            f[r, i] = doc.count_voc(v)
-    return f
+            count = doc.count_voc(v)
+            term_freq[r, i] = count
+            bag_of_words[r, i] = 1 if count else 0
 
-
-def bag_of_words(freq):
-    '''
-    0/1 Matrix with docs on columns, words on rows.
-    '''
-    vd = np.array(freq)
-    for i in range(freq.shape[0]):
-        for j in range(freq.shape[1]):
-            vd[i, j] = 1 if freq[i, j] else 0
-    return vd
+    return term_freq, bag_of_words
 
 
 def max_per_doc(freq):
@@ -37,17 +29,6 @@ def max_per_doc(freq):
     cols = freq.shape[1]
     for col in range(cols):
         v_max[col] = max(freq[:, col])
-    return v_max
-
-
-def doc_freq(freq):
-    '''
-    Vector in which the word[i] appears.
-    '''
-    v_max = np.zeros(freq.shape[1])
-    cols = freq.shape[1]
-    for col in range(cols):
-        v_max[col] = sum(freq[:, col])
     return v_max
 
 

@@ -45,11 +45,10 @@ def text_to_words(doc, stopwords):
     :returns: a list of words in the document without the stopwords
     '''
     words = []
-    for line in doc.splitlines():
-        for word in line.split():
-            good_word = sanitize_word(word)
-            if good_word not in stopwords:
-                words.append(good_word)
+    for word in doc.split():
+        good_word = sanitize_word(word)
+        if good_word not in stopwords:
+            words.append(good_word)
 
     return words
 

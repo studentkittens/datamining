@@ -6,7 +6,7 @@
 Usage:
     cluster <directory> [--stop-words=<sw_file>] [--verbose|-v] [--quiet|-q] [--show-no-gui] [--language=<lang>]
     cluster -h|--help
-    cluster -V| --version
+    cluster -V|--version
 
 Options:
     -h --help               Show this message. [default: No]
@@ -43,14 +43,14 @@ def get_stopwords(sw_path):
         with open(sw_path, 'r') as f:
             return set([voc.sanitize_word(word) for word in f.read().split()])
     except FileNotFoundError:
-        logging.warning('No file called <%s>, use --stop-words' % sw_path)
+        logging.warning('No file called <%s>, use --stop-words (correctly)' % sw_path)
         sys.exit(-1)
 
 
 def main(options):
     voc.set_stemmer(options['--language'])
 
-    with timing('Total time of calculations'):
+    with timing('Summed up total time of calculations'):
         # Read vocabulary and documents
         with timing('Fetching stopwords'):
             stopwords = get_stopwords(options['--stop-words'])
@@ -60,9 +60,11 @@ def main(options):
             docs = voc.read_directory(options['<directory>'], stopwords)
 
         # Join vocabulary to a whole one
-        vocabular = []
-        for doc in docs:
-            vocabular += doc.vocs
+        with timing('Joining invidually vocabulary to one list'):
+            vocabular = []
+            for doc in docs:
+                vocabular += doc.vocs
+            logging.debug('Full vocabulary:\n#' + vocabular)
 
         with timing('%d Documents with %d distinct words' % (len(docs), len(vocabular))):
             pass
@@ -71,13 +73,9 @@ def main(options):
             vocabular = list(set(vocabular))
             logging.debug("Full vocabulary:\n%s" % vocabular)
 
-        with timing('Calculating Termfrequency'):
-            termfreq = calc.termfreq(docs, vocabular)
+        with timing('Calculating Termfrequency and Bag of Words'):
+            termfreq, bag_of_words = calc.termfreq(docs, vocabular)
             logging.debug("Termfreq:\n%s" % termfreq)
-
-        with timing('Calculating Bag of Words'):
-            bag_of_words = calc.bag_of_words(termfreq)
-            logging.debug("Bag of Words:\n%s" % bag_of_words)
 
         with timing('Calculating Max terms per Document'):
             v_max = calc.max_per_doc(termfreq)
