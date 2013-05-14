@@ -5,6 +5,7 @@ from cluster2 import *
 from document import Document
 from timing import timing
 
+import calculations as calc
 
 class Distance:
     def __init__(self, dist, a, b):
@@ -21,7 +22,7 @@ def build_cluster_tree(
     with timing('Preparing distances'):
         distances = []
         n_rows = len(docs)
-        
+
         #build bottom of cluster tree
         clusterLeafs = [ClusterLeaf(doc) for doc in docs]
 
@@ -29,6 +30,7 @@ def build_cluster_tree(
 
         for i in range(n_rows):
             doc = docs[i]
+            doc.distances[doc.name] = 1.0
             doc.set_norm_freq(termfreq[i], norm_termfreq[i], sorted_mapping)
 
             for j in range(i + 1, n_rows):
@@ -42,7 +44,7 @@ def build_cluster_tree(
                 docs[j].distances[doc.name] = dist
 
     with timing('Calling maketree'):
-        return maketree(distances, clusterLeafs) 
+        return maketree(distances, clusterLeafs)
 
 def maketree(dists, clusterLeafs):
     # sort dists
@@ -56,8 +58,8 @@ def maketree(dists, clusterLeafs):
       dist = dists[i]
       if not dist.a.root is dist.b.root:
         #link previous root nodes under new root node
-        ClusterTree(dist.a.root, dist.b.root)
+        ClusterTree(dist.a.root, dist.b.root, dist.a.root.docs + dist.b.root.docs)
       #else: leaf1 and leaf2 are already in the same cluster, so pass
-      i -= 1  
+      i -= 1
     #clusterLeaf[x].root is now all the same
     return clusterLeafs[0].root
