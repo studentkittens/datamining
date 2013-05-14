@@ -35,7 +35,7 @@ from docopt import docopt
 import calculations as calc
 import vocabular as voc
 
-from maketree2 import build_cluster_tree
+from maketree import build_cluster_tree
 from gui import show_treevis
 
 

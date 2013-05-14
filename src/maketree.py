@@ -1,8 +1,11 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-from cluster import Cluster
+from cluster import ClusterLeaf, ClusterTree
 from document import Document
+from timing import timing
+
+import calculations as calc
 
 
 class Distance:
@@ -11,50 +14,58 @@ class Distance:
         self.b = b
         self.dist = dist
 
-    def __lt__(self, node):
-        return self.dist < node.dist
-
-    def __eq__(self, node):
-        print("eq")
-        return (self.a is node.a or self.a is node.b) and (self.b is node.a or self.b is node.b)
-
-    def __hash__(self):
-        print("Hassh?")
-        return id(self.a) + id(self.b)
-
     def __repr__(self):
-        return "Dist({a}-{b}={d})".format(d=self.dist, a=self.a, b=self.b)
+        return '(%f, %s - %s)' % (self.dist, str(self.a), str(self.b))
 
 
-def maketree(distances, cluster_len):
-    s = distances
+def build_cluster_tree(
+        docs, weight_matrix,
+        document_abs, norm_termfreq, termfreq,
+        vocabular):
+    with timing('Preparing distances'):
+        distances = []
+        n_rows = len(docs)
 
-    # parent is the topmost node
-    parent = None
+        #build bottom of cluster tree
+        clusterLeafs = [ClusterLeaf(doc) for doc in docs]
 
-    # Iterate till n-1 new nodes have been created.
-    for i in range(cluster_len - 1):
-        # Get the cluster with the shortest distance out
-        # On every iteration the length should be sum(0..n-1)
-        nearest = max(s)
-        for idx, elem in enumerate(s):
-            if elem is nearest:
-                del s[idx]
-                break
+        sorted_mapping = {voc: idx for idx, voc in enumerate(vocabular)}
 
-        left, right = nearest.a, nearest.b
+        for i in range(n_rows):
+            doc = docs[i]
+            doc.distances[doc.name] = 1.0
+            doc.set_norm_freq(termfreq[i], norm_termfreq[i], sorted_mapping)
 
-        # Create a new cluster, containing both
-        parent = Cluster(left.docs + right.docs,
-                left=left, right=right
-        )
+            for j in range(i + 1, n_rows):
+                dist = calc.distance(
+                        weight_matrix[i], weight_matrix[j],
+                        document_abs[i], document_abs[j]
+                )
+                distances.append(Distance(dist, clusterLeafs[i], clusterLeafs[j]))
 
-        for dist in s:
-            if dist.a is left or dist.a is right:
-                dist.a = parent
-            elif dist.b is left or dist.b is right:
-                dist.b = parent
+                doc.distances[docs[j].name] = dist
+                docs[j].distances[doc.name] = dist
 
-        s = list(frozenset(s))
+    with timing('Calling maketree'):
+        return maketree(distances, clusterLeafs)
 
-    return parent
+
+def maketree(dists, clusterLeafs):
+    # sort dists
+    dists = sorted(dists, key=lambda a: a.dist)
+    # index to last element in distance list
+    i = len(dists) - 1
+    nDocs = len(clusterLeafs)
+
+    # algo is finished if cluster root contains all documents
+    while clusterLeafs[0].root.nLeafs < nDocs:
+        assert(i >= 0)
+        dist = dists[i]
+        if not dist.a.root is dist.b.root:
+            #link previous root nodes under new root node
+            ClusterTree(dist.a.root, dist.b.root, dist.a.root.docs + dist.b.root.docs)
+        #else: leaf1 and leaf2 are already in the same cluster, so pass
+        i -= 1
+
+    #clusterLeaf[x].root is now all the same
+    return clusterLeafs[0].root
