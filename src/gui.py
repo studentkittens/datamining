@@ -259,7 +259,7 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in self.selected_cluster.docs:
                 distance = self.selected_doc.distances[doc.name]
                 cut_path = os.path.basename(doc.path)
-                lines.append((cut_path, math.log10(distance * 100 + 1) / 2.0))
+                lines.append((cut_path[:20], math.log10(distance * 100 + 1) / 2.0))
 
             if len(lines) > 1:
                 # This matches the chart background color
