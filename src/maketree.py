@@ -52,20 +52,19 @@ def build_cluster_tree(
 
 def maketree(dists, clusterLeafs):
     # sort dists
-    dists = sorted(dists, key=lambda a: a.dist)
-    # index to last element in distance list
-    i = len(dists) - 1
+    dists = sorted(dists, key=lambda a: a.dist, reverse=True)
     nDocs = len(clusterLeafs)
 
-    # algo is finished if cluster root contains all documents
-    while clusterLeafs[0].root.nLeafs < nDocs:
-        assert(i >= 0)
-        dist = dists[i]
+    for dist in dists:
+        # algo is finished if cluster root contains all documents
+        if not clusterLeafs[0].root.nLeafs < nDocs:
+            break
+
         if not dist.a.root is dist.b.root:
-            #link previous root nodes under new root node
+            # link previous root nodes under new root node
             ClusterTree(dist.a.root, dist.b.root, dist.a.root.docs + dist.b.root.docs)
-        #else: leaf1 and leaf2 are already in the same cluster, so pass
-        i -= 1
+        #else:
+            # leaf1 and leaf2 are already in the same cluster, so pass
 
     #clusterLeaf[x].root is now all the same
     return clusterLeafs[0].root
