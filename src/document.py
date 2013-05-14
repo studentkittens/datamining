@@ -13,7 +13,7 @@ class Document:
         self._vocs_index = {}
         self._build_voc_index()
 
-        self._name = 'd' + str(Document.DOC_INDEX)
+        self._name = str(Document.DOC_INDEX)
         self._distances = {}
 
         self._norm_freq = [0.0 for voc in self._vocs]

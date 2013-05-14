@@ -34,7 +34,8 @@ def get_theme_color(widget, background=True, state=Gtk.StateFlags.SELECTED):
 CHART_OPTIONS = {
     'axis': {
         'x': {
-            'ticks': []
+            'ticks': [],
+            'rotate': 60,
         },
         'y': {
             'tickCount': 4,
@@ -98,7 +99,7 @@ class TreeVis(Gtk.ApplicationWindow):
         # Models
         self.tree_store = Gtk.TreeStore(str)
         self.tree.set_model(self.tree_store)
-        self.list_store = Gtk.ListStore(str)
+        self.list_store = Gtk.ListStore(str, str)
         self.list.set_model(self.list_store)
         self.docbuffer = self.docview.get_buffer()
         self.voc_store = Gtk.ListStore(str, int, str)
@@ -119,7 +120,10 @@ class TreeVis(Gtk.ApplicationWindow):
             'Treeview', Gtk.CellRendererText(), text=0)
         )
         self.list.append_column(
-                Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=0)
+                Gtk.TreeViewColumn('DocID', Gtk.CellRendererText(), text=0)
+        )
+        self.list.append_column(
+                Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=1)
         )
         self.vocview.append_column(
                 Gtk.TreeViewColumn('Vocabulary', Gtk.CellRendererText(), text=0)
@@ -190,7 +194,7 @@ class TreeVis(Gtk.ApplicationWindow):
         if cluster is not None:
             self.selected_cluster = cluster
             for doc in cluster.docs:
-                self.list_store.append((doc.path,))
+                self.list_store.append((doc.name, doc.path,))
 
     def _fill_docview(self, heading, body):
         self.docbuffer.set_text('')
@@ -223,7 +227,7 @@ class TreeVis(Gtk.ApplicationWindow):
 
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
-            doc_name = model[tree_iter][0]
+            doc_name = model[tree_iter][1]
             for doc in self.selected_cluster.docs:
                 if doc.path == doc_name:
                     self.selected_doc = doc
@@ -255,7 +259,7 @@ class TreeVis(Gtk.ApplicationWindow):
             for doc in self.selected_cluster.docs:
                 distance = self.selected_doc.distances[doc.name]
                 cut_path = os.path.basename(doc.path)
-                lines.append((cut_path[-5:-1], math.log10(distance * 100 + 1) / 2.0))
+                lines.append((cut_path, math.log10(distance * 100 + 1) / 2.0))
 
             if len(lines) > 1:
                 # This matches the chart background color
