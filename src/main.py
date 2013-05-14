@@ -59,59 +59,60 @@ def get_stopwords(sw_path):
 def main(options):
     voc.set_stemmer(options['--language'])
 
-    # Read vocabulary and documents
-    with timing('Fetching stopwords'):
-        stopwords = get_stopwords(options['--stop-words'])
-        logging.debug("Stopwords:\n%s" % stopwords)
+    with timing('Total time of calculations'):
+        # Read vocabulary and documents
+        with timing('Fetching stopwords'):
+            stopwords = get_stopwords(options['--stop-words'])
+            logging.debug("Stopwords:\n%s" % stopwords)
 
-    with timing('Reading directory contents'):
-        docs = voc.read_directory(options['<directory>'], stopwords)
+        with timing('Reading directory contents'):
+            docs = voc.read_directory(options['<directory>'], stopwords)
 
-    # Join vocabulary to a whole one
-    vocabular = []
-    for doc in docs:
-        vocabular += doc.vocs
+        # Join vocabulary to a whole one
+        vocabular = []
+        for doc in docs:
+            vocabular += doc.vocs
 
-    with timing('%d Documents with %d distinct words' % (len(docs), len(vocabular))):
-        pass
+        with timing('%d Documents with %d distinct words' % (len(docs), len(vocabular))):
+            pass
 
-    with timing('Deduplicating vocabulary'):
-        vocabular = list(set(vocabular))
-        logging.debug("Full vocabulary:\n%s" % vocabular)
+        with timing('Deduplicating vocabulary'):
+            vocabular = list(set(vocabular))
+            logging.debug("Full vocabulary:\n%s" % vocabular)
 
-    with timing('Calculating Termfrequency'):
-        termfreq = calc.termfreq(docs, vocabular)
-        logging.debug("Termfreq:\n%s" % termfreq)
+        with timing('Calculating Termfrequency'):
+            termfreq = calc.termfreq(docs, vocabular)
+            logging.debug("Termfreq:\n%s" % termfreq)
 
-    with timing('Calculating Bag of Words'):
-        bag_of_words = calc.bag_of_words(termfreq)
-        logging.debug("Bag of Words:\n%s" % bag_of_words)
+        with timing('Calculating Bag of Words'):
+            bag_of_words = calc.bag_of_words(termfreq)
+            logging.debug("Bag of Words:\n%s" % bag_of_words)
 
-    with timing('Calculating Max terms per Document'):
-        v_max = calc.max_per_doc(termfreq)
-        logging.debug("v_max:\n%s" % v_max)
+        with timing('Calculating Max terms per Document'):
+            v_max = calc.max_per_doc(termfreq)
+            logging.debug("v_max:\n%s" % v_max)
 
-    with timing('Calculating Normalized Termfrequency'):
-        norm_termfreq = calc.normalized_term_freq(termfreq, v_max)
-        logging.debug("Normed Termfreq:\n%s" % norm_termfreq)
+        with timing('Calculating Normalized Termfrequency'):
+            norm_termfreq = calc.normalized_term_freq(termfreq, v_max)
+            logging.debug("Normed Termfreq:\n%s" % norm_termfreq)
 
-    with timing('Calculating Inverse Document Frequency'):
-        inverse_doc_freq = calc.inverse_doc_freq(len(docs), bag_of_words)
-        logging.debug("Inverse Doc Freq:\n%s" % inverse_doc_freq)
+        with timing('Calculating Inverse Document Frequency'):
+            inverse_doc_freq = calc.inverse_doc_freq(len(docs), bag_of_words)
+            logging.debug("Inverse Doc Freq:\n%s" % inverse_doc_freq)
 
-    with timing('Calculating Weight Matrix'):
-        weight_matrix = calc.weight_matrix(norm_termfreq, inverse_doc_freq)
-        logging.debug("Weight Vec:\n%s" % weight_matrix)
+        with timing('Calculating Weight Matrix'):
+            weight_matrix = calc.weight_matrix(norm_termfreq, inverse_doc_freq)
+            logging.debug("Weight Vec:\n%s" % weight_matrix)
 
-    with timing('Calculating Document Vector Length'):
-        document_abs = calc.document_abs(weight_matrix)
-        logging.debug("Document Abs:\n%s" % document_abs)
+        with timing('Calculating Document Vector Length'):
+            document_abs = calc.document_abs(weight_matrix)
+            logging.debug("Document Abs:\n%s" % document_abs)
 
-    # Build hierachical clusters from the weight_matrix
-    cluster_tree = build_cluster_tree(
-            docs, weight_matrix, document_abs,
-            norm_termfreq, termfreq, vocabular
-    )
+        # Build hierachical clusters from the weight_matrix
+        cluster_tree = build_cluster_tree(
+                docs, weight_matrix, document_abs,
+                norm_termfreq, termfreq, vocabular
+        )
 
     # Visualize the tree
     if not options['--show-no-gui']:
