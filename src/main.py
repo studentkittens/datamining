@@ -64,7 +64,6 @@ def main(options):
             vocabular = []
             for doc in docs:
                 vocabular += doc.vocs
-            logging.debug('Full vocabulary:\n#' + vocabular)
 
         with timing('%d Documents with %d distinct words' % (len(docs), len(vocabular))):
             pass
