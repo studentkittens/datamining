@@ -34,7 +34,7 @@ def read_directory(root, stopwords, pattern='*.txt'):
 
 
 def sanitize_word(word):
-    'Normalize a single word'
+    'Normalize a single word'≡jedi=0, ≡      (*iterable*) ≡jedi≡
     return stemmer.stemWord(''.join(filter(str.isalnum, word)).lower())
 
 

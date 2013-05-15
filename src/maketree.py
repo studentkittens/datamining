@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-import pydot as dot
 
 
 from cluster import ClusterLeaf, ClusterTree
@@ -54,6 +53,7 @@ def build_cluster_tree(
 
 
 def draw_graphviz(root):
+    import pydot as dot
     graph = dot.Dot(graph_type='digraph')
     graph.set_node_defaults(shape='circle', fixedsize='true',
             height=.85, width=.85, fontsize=10
