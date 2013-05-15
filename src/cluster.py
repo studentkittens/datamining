@@ -21,6 +21,10 @@ class ClusterNode:
     def docs(self):
         return []
 
+    @property
+    def label(self):
+        return ' '
+
 
 class ClusterTree(ClusterNode):
     def __init__(self, left, right, docs):
@@ -68,3 +72,7 @@ class ClusterLeaf(ClusterNode):
     @property
     def docs(self):
         return [self.doc]
+
+    @property
+    def label(self):
+        return self.doc.path

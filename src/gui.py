@@ -35,7 +35,7 @@ CHART_OPTIONS = {
     'axis': {
         'x': {
             'ticks': [],
-            'rotate': 60,
+            'rotate': 90,
         },
         'y': {
             'tickCount': 4,
@@ -97,9 +97,9 @@ class TreeVis(Gtk.ApplicationWindow):
         self.vocview = builder.get_object('vocview')
 
         # Models
-        self.tree_store = Gtk.TreeStore(str)
+        self.tree_store = Gtk.TreeStore(str, str)
         self.tree.set_model(self.tree_store)
-        self.list_store = Gtk.ListStore(str, str)
+        self.list_store = Gtk.ListStore(str)
         self.list.set_model(self.list_store)
         self.docbuffer = self.docview.get_buffer()
         self.voc_store = Gtk.ListStore(str, int, str)
@@ -120,10 +120,7 @@ class TreeVis(Gtk.ApplicationWindow):
             'Treeview', Gtk.CellRendererText(), text=0)
         )
         self.list.append_column(
-                Gtk.TreeViewColumn('DocID', Gtk.CellRendererText(), text=0)
-        )
-        self.list.append_column(
-                Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=1)
+                Gtk.TreeViewColumn('Documents', Gtk.CellRendererText(), text=0)
         )
         self.vocview.append_column(
                 Gtk.TreeViewColumn('Vocabulary', Gtk.CellRendererText(), text=0)
@@ -175,7 +172,7 @@ class TreeVis(Gtk.ApplicationWindow):
         while len(nodes) is not 0:
             childs = []
             for node, tree_iter in nodes:
-                curr_iter = self.tree_store.append(tree_iter, (node.name,))
+                curr_iter = self.tree_store.append(tree_iter, (node.label, node.name))
                 self.tree_map[node.name] = node
                 if node.left is not None:
                     childs.append((node.left, curr_iter))
@@ -194,7 +191,7 @@ class TreeVis(Gtk.ApplicationWindow):
         if cluster is not None:
             self.selected_cluster = cluster
             for doc in cluster.docs:
-                self.list_store.append((doc.name, doc.path,))
+                self.list_store.append((doc.path,))
 
     def _fill_docview(self, heading, body):
         self.docbuffer.set_text('')
@@ -227,7 +224,7 @@ class TreeVis(Gtk.ApplicationWindow):
 
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
-            doc_name = model[tree_iter][1]
+            doc_name = model[tree_iter][0]
             for doc in self.selected_cluster.docs:
                 if doc.path == doc_name:
                     self.selected_doc = doc
@@ -244,7 +241,7 @@ class TreeVis(Gtk.ApplicationWindow):
         # Refill documents list
         model, tree_iter = selection.get_selected()
         if tree_iter is not None:
-            self._fill_list(model[tree_iter][0])
+            self._fill_list(model[tree_iter][1])
 
         # Auto-select first item
         self.list.get_selection().select_path('0')

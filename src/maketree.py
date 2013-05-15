@@ -1,6 +1,9 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import pydot as dot
+
+
 from cluster import ClusterLeaf, ClusterTree
 from document import Document
 from timing import timing
@@ -50,7 +53,27 @@ def build_cluster_tree(
         return maketree(distances, clusterLeafs)
 
 
+def draw_graphviz(root):
+    graph = dot.Dot(graph_type='digraph')
+    graph.set_node_defaults(shape='circle', fixedsize='true',
+            height=.85, width=.85, fontsize=10
+    )
+
+    def traverse(node, parent=None):
+        if not node is None:
+            gvnode = dot.Node(name=node.name, label=node.label)
+            graph.add_node(gvnode)
+            if not parent is None:
+                graph.add_edge(dot.Edge(parent, node.name))
+            traverse(node.left, gvnode)
+            traverse(node.right, gvnode)
+
+    traverse(root)
+    graph.write_png("cluster.png")
+
+
 def maketree(dists, clusterLeafs):
+
     # sort dists
     dists = sorted(dists, key=lambda a: a.dist, reverse=True)
     nDocs = len(clusterLeafs)
@@ -62,9 +85,11 @@ def maketree(dists, clusterLeafs):
 
         if not dist.a.root is dist.b.root:
             # link previous root nodes under new root node
-            ClusterTree(dist.a.root, dist.b.root, dist.a.root.docs + dist.b.root.docs)
+            parent = ClusterTree(dist.a.root, dist.b.root, dist.a.root.docs + dist.b.root.docs)
+
         #else:
             # leaf1 and leaf2 are already in the same cluster, so pass
 
     #clusterLeaf[x].root is now all the same
+    #draw_graphviz(clusterLeafs[0].root)
     return clusterLeafs[0].root
