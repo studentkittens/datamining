@@ -2,75 +2,58 @@
 # encoding: utf-8
 from collections import Counter
 from itertools import combinations
-from math import log10, factorial
+from math import log, factorial
 
 
 def read_sentences(filename):
-    sents = []
-    with open(filename,'r') as f:
-        for r in f:
-            sent = set()
-            sents.append(sent)
-            for w in r.split():
-                w = normalize(w)
-                if w: sent.add(w)
-    return sents
+    sentences = []
+    with open(filename, 'r') as file_handle:
+        for line in file_handle:
+            sentence = set(filter(lambda x: x, [normalize(w) for w in line.split()]))
+            sentences.append(sentence)
+    return sentences
 
 
 def normalize(word):
     return ''.join(filter(str.isalnum, word.lower()))
 
 
-def countWords(sents):
-    c = Counter()
-    adj = {}
-    for sent in sents:
-        for w in sent:
-            c[w] += 1
-            l = adj.get(w)
-            if l is None:
-                l = set()
-                adj[w] = l
-            l.add(tuple(sent))
-    return c, adj
+def count_words(sentences):
+    ctr = Counter()
+    lookup_table = {}
+    for sentence in sentences:
+        for word in sentence:
+            lookup_table.setdefault(word, set()).add(tuple(sentence))
+        ctr.update(sentence)
+    return ctr, lookup_table
 
 
-def sig(t, k, n, words):
-    a = words[t[0]]
-    b = words[t[1]]
+def significance(a, b, k, n):
     lam = a * b / n
     if (k + 1) / lam > 2.5:
         if k > 10:
-            return k * (log10(k) - log10(lam) - 1) / log10(n)
-        else:
-            return (lam - k * log10(lam) + log10(factorial(k))) / log10(n)
-    else:
-        return 0
+            return (k * (log(k) - log(lam) - 1)) / log(n)
+        return (lam - k * log(lam) + log(factorial(k))) / log(n)
+    return 0
 
-
-def main():
-    sents = read_sentences('lst.csv')
-    words, adj  = countWords(sents)
-    unigrams = {k: v for k, v in words.items() if v > 49}
-
-    print('n unigrams', len(unigrams))
-    bigram_counter = Counter()
-    for a, b in combinations(unigrams.keys(),2):
-        la = adj[a]
-        lb = adj[b]
-
-        k = len(la.intersection(lb))
-        if k > 0:
-            bigram_counter[(a, b)] = k
-    n = len(sents)
-
-    sigs = {t : sig(t, k, n, words) for t,k in bigram_counter.items()}
-    sorted_sigs = sorted(sigs.items(), key=lambda t: t[1], reverse=True)
-
-    for ab, significance in sorted_sigs:
-        print(ab, 's:', significance, 'k:', bigram_counter[ab], 'a', words[ab[0]], 'b', words[ab[1]])
-
-    print(n)
 
 if __name__ == '__main__':
-    main()
+    sentences = read_sentences('lst.csv')
+    words, lookup_table = count_words(sentences)
+    unigrams = {k: v for k, v in words.items() if v > 49}
+
+    bigram_counter = {}
+    for a, b in combinations(unigrams.keys(), 2):
+        intersect_len = len(lookup_table[a] & lookup_table[b])
+        if intersect_len > 0:
+            bigram_counter[(a, b)] = intersect_len
+
+    sigs = {}
+    for ab, k in bigram_counter.items():
+        sigs[ab] = significance(words[ab[0]], words[ab[1]], k, len(sentences))
+
+    sorted_sigs = sorted(sigs.items(), key=lambda t: t[1], reverse=True)
+    for ab, signum in sorted_sigs:
+        print('ab: {} s: {} k: {} a: {} b: {}'.format(
+            ab, signum, bigram_counter[ab], words[ab[0]], words[ab[1]]
+        ))
