@@ -9,7 +9,7 @@ def read_sentences(filename):
     sentences = []
     with open(filename, 'r') as file_handle:
         for line in file_handle:
-            sentence = set(filter(lambda x: x, [normalize(w) for w in line.split()]))
+            sentence = set(filter(None, [normalize(w) for w in line.split()]))
             sentences.append(sentence)
     return sentences
 
